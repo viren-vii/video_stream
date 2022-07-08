@@ -1,19 +1,19 @@
 from flask import Flask, render_template, Response
 import time
 import cv2
-import test
-import socket
+from subprocess import check_output
 
 app = Flask(__name__)
 
-IPAddr = socket.gethostbyname(socket.gethostname())
+IPAddr = str(check_output(["hostname", "-I"]).split()[0])[2:-1]
 print(IPAddr)
 
 cv2.destroyAllWindows()
 
 # time.sleep(2)
 print("...........................")
-camera = cv2.VideoCapture(0)
+camera = cv2.VideoCapture(3)
+
 
 def gen_frames():  # generate frame by frame from camera
     print("I am in here")
@@ -25,6 +25,7 @@ def gen_frames():  # generate frame by frame from camera
             break
         else:
             # print("coing here")
+
             ret, buffer = cv2.imencode('.jpg', frame)
             frame = buffer.tobytes()
             yield (b'--frame\r\n'
@@ -33,7 +34,7 @@ def gen_frames():  # generate frame by frame from camera
 
 @app.route('/video_feed')
 def video_feed():
-    #Video streaming route. Put this in the src attribute of an img tag
+    # Video streaming route. Put this in the src attribute of an img tag
     return Response(gen_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 
@@ -45,4 +46,4 @@ def index():
 
 
 if __name__ == '__main__':
-    app.run(debug=False,host="192.168.127.142",port=8000)
+    app.run(debug=False, host=IPAddr, port=8080)
